@@ -37,7 +37,7 @@ XFilter is not on the Chrome Web Store. Install it manually in a few steps:
 Clone this repository or download it as a ZIP and extract it:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/xfilter.git
+git clone https://github.com/Beyazt43/xfilter.git
 ```
 
 **2. Open your browser's extension page**
