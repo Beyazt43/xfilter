@@ -28,28 +28,30 @@ chrome.runtime.onMessage.addListener((msg) => {
 function getHandles(article) {
   const handles = [];
 
-  // 1. Retweeter — lives in the "X Retweeted" social context bar
-  //    Twitter puts a link to the retweeter's profile there.
-  const socialContext = article.querySelector('[data-testid="socialContext"]');
-  if (socialContext) {
-    const rtLink = socialContext.querySelector('a[href^="/"]');
-    if (rtLink) {
-      const match = rtLink.getAttribute('href').match(/^\/([^/?]+)/);
-      if (match) handles.push(match[1].toLowerCase());
+  // 1. Retweeter — Twitter renders the "X Retweeted" bar as a SIBLING above
+  //    the article, not inside it. Climb up to the cell wrapper to find it.
+  const cell = article.closest('[data-testid="cellInnerDiv"]') || article.parentElement;
+  if (cell) {
+    const socialContext = cell.querySelector('[data-testid="socialContext"]');
+    if (socialContext) {
+      const rtLink = socialContext.querySelector('a[href^="/"]');
+      if (rtLink) {
+        const match = rtLink.getAttribute('href').match(/^\/([^/?]+)/);
+        if (match) handles.push(match[1].toLowerCase());
+      }
     }
   }
 
-  // 2. Original tweet author — from the User-Name block
+  // 2. Original tweet author — from the User-Name block inside the article
   const userNameBlock = article.querySelector('[data-testid="User-Name"]');
   if (userNameBlock) {
-    // @handle span
     const spans = userNameBlock.querySelectorAll('span');
     for (const span of spans) {
       const t = span.textContent.trim();
       if (t.startsWith('@')) { handles.push(t.slice(1).toLowerCase()); break; }
     }
     // Fallback: profile link href
-    if (handles.length === (socialContext ? 1 : 0)) {
+    if (handles.length === (handles[0] ? 1 : 0)) {
       const link = userNameBlock.querySelector('a[href^="/"]');
       if (link) {
         const match = link.getAttribute('href').match(/^\/([^/?]+)/);
