@@ -34,9 +34,12 @@ function getHandles(article) {
   if (cell) {
     const socialContext = cell.querySelector('[data-testid="socialContext"]');
     if (socialContext) {
-      const rtLink = socialContext.querySelector('a[href^="/"]');
+      // FIX: The profile link could be the socialContext itself, inside it, or wrapping it.
+      const rtLink = socialContext.tagName === 'A' ? socialContext : (socialContext.querySelector('a') || socialContext.closest('a'));
       if (rtLink) {
-        const match = rtLink.getAttribute('href').match(/^\/([^/?]+)/);
+        const href = rtLink.getAttribute('href');
+        // FIX: Support both relative (/username) and absolute (https://x.com/username) URLs
+        const match = href && href.match(/^(?:https?:\/\/(?:twitter\.com|x\.com))?\/([^/?#]+)/i);
         if (match) handles.push(match[1].toLowerCase());
       }
     }
@@ -45,16 +48,22 @@ function getHandles(article) {
   // 2. Original tweet author — from the User-Name block inside the article
   const userNameBlock = article.querySelector('[data-testid="User-Name"]');
   if (userNameBlock) {
+    let foundAuthor = false;
     const spans = userNameBlock.querySelectorAll('span');
     for (const span of spans) {
       const t = span.textContent.trim();
-      if (t.startsWith('@')) { handles.push(t.slice(1).toLowerCase()); break; }
+      if (t.startsWith('@')) {
+        handles.push(t.slice(1).toLowerCase());
+        foundAuthor = true;
+        break;
+      }
     }
     // Fallback: profile link href
-    if (handles.length === (handles[0] ? 1 : 0)) {
-      const link = userNameBlock.querySelector('a[href^="/"]');
+    if (!foundAuthor) {
+      const link = userNameBlock.querySelector('a[href]');
       if (link) {
-        const match = link.getAttribute('href').match(/^\/([^/?]+)/);
+        const href = link.getAttribute('href');
+        const match = href && href.match(/^(?:https?:\/\/(?:twitter\.com|x\.com))?\/([^/?#]+)/i);
         if (match) handles.push(match[1].toLowerCase());
       }
     }
@@ -89,22 +98,27 @@ function processTweet(article) {
   // Trigger if ANY of the handles (retweeter or author) is in the filter list
   const isFiltered = handles.some(h => filteredUsers.has(h));
 
+  // FIX: Hide the outer timeline cell instead of just the article.
+  // Hiding only the article leaves a floating "X Reposted" text behind.
+  const cell = article.closest('[data-testid="cellInnerDiv"]');
+  const target = cell || article;
+
   if (!isFiltered) {
     // Not a filtered user — restore visibility in case they were removed from list
-    if (article.dataset.xfilterHidden === 'true') {
-      article.style.display = '';
-      article.dataset.xfilterHidden = 'false';
+    if (target.dataset.xfilterHidden === 'true') {
+      target.style.display = '';
+      target.dataset.xfilterHidden = 'false';
     }
     return;
   }
 
   // Filtered user: hide if no image, show if image
   if (hasImage(article)) {
-    article.style.display = '';
-    article.dataset.xfilterHidden = 'false';
+    target.style.display = '';
+    target.dataset.xfilterHidden = 'false';
   } else {
-    article.style.display = 'none';
-    article.dataset.xfilterHidden = 'true';
+    target.style.display = 'none';
+    target.dataset.xfilterHidden = 'true';
   }
 }
 
