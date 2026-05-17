@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "XFilter — Image-Only Feed",
+  "version": "1.0",
+  "description": "For selected users, hide text-only tweets and show only posts with images.",
+  "permissions": ["storage"],
+  "host_permissions": ["https://twitter.com/*", "https://x.com/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "XFilter"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://twitter.com/*", "https://x.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

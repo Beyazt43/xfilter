@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>XFilter</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap');
+
+    :root {
+      --bg:       #0d0d0d;
+      --surface:  #161616;
+      --border:   #2a2a2a;
+      --accent:   #00e5ff;
+      --accent2:  #00b4cc;
+      --text:     #e8e8e8;
+      --muted:    #666;
+      --danger:   #ff4d4d;
+      --success:  #00e5a0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 320px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 13px;
+      min-height: 200px;
+    }
+
+    /* ── Header ── */
+    .header {
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo {
+      width: 26px; height: 26px;
+      background: var(--accent);
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo svg { width: 14px; height: 14px; fill: #000; }
+    .header-text h1 {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+    }
+    .header-text p {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 1px;
+      letter-spacing: 0.02em;
+    }
+
+    /* ── Status bar ── */
+    .status {
+      padding: 6px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* ── Input area ── */
+    .input-section {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .input-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .input-row {
+      display: flex;
+      gap: 6px;
+    }
+    input[type="text"] {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 7px 10px;
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input[type="text"]::placeholder { color: var(--muted); }
+    input[type="text"]:focus { border-color: var(--accent); }
+
+    button.add-btn {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 4px;
+      padding: 7px 12px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    button.add-btn:hover { background: var(--accent2); }
+
+    .error-msg {
+      font-size: 10px;
+      color: var(--danger);
+      margin-top: 5px;
+      font-family: 'IBM Plex Mono', monospace;
+      min-height: 14px;
+    }
+
+    /* ── User list ── */
+    .list-section {
+      padding: 0 16px 12px;
+    }
+    .list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0 6px;
+    }
+    .list-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .count-badge {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1px 7px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      color: var(--accent);
+    }
+
+    .user-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .user-list::-webkit-scrollbar { width: 3px; }
+    .user-list::-webkit-scrollbar-track { background: transparent; }
+    .user-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .user-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 10px;
+      animation: slideIn 0.15s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .user-handle {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      color: var(--accent);
+    }
+    .remove-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      padding: 0 2px;
+      transition: color 0.15s;
+    }
+    .remove-btn:hover { color: var(--danger); }
+
+    .empty-state {
+      text-align: center;
+      padding: 20px 0;
+      color: var(--muted);
+      font-size: 11px;
+      font-family: 'IBM Plex Mono', monospace;
+      line-height: 1.6;
+    }
+    .empty-state span {
+      display: block;
+      font-size: 20px;
+      margin-bottom: 6px;
+      opacity: 0.4;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .footer-note {
+      font-size: 9px;
+      color: var(--muted);
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    .clear-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--muted);
+      font-size: 9px;
+      font-family: 'IBM Plex Mono', monospace;
+      padding: 3px 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .clear-btn:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo">
+      <svg viewBox="0 0 24 24"><path d="M3 5h18M3 12h18M3 19h10"/><rect x="15" y="15" width="7" height="7" rx="1"/></svg>
+    </div>
+    <div class="header-text">
+      <h1>XFILTER</h1>
+      <p>image-only feed filter</p>
+    </div>
+  </div>
+
+  <div class="status">
+    <div class="status-dot"></div>
+    <span id="status-text">active on twitter.com / x.com</span>
+  </div>
+
+  <div class="input-section">
+    <div class="input-label">Add user to filter</div>
+    <div class="input-row">
+      <input type="text" id="handle-input" placeholder="@username" maxlength="50" />
+      <button class="add-btn" id="add-btn">ADD</button>
+    </div>
+    <div class="error-msg" id="error-msg"></div>
+  </div>
+
+  <div class="list-section">
+    <div class="list-header">
+      <div class="list-label">Filtered users</div>
+      <div class="count-badge" id="count-badge">0</div>
+    </div>
+    <div class="user-list" id="user-list"></div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-note">text tweets hidden · images shown</div>
+    <button class="clear-btn" id="clear-btn">CLEAR ALL</button>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
